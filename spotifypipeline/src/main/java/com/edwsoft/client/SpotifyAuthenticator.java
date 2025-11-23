@@ -16,17 +16,18 @@ import java.util.Optional;
 
 public class SpotifyAuthenticator {
 
-    private final PipelineConfig pipelineConfig = new PipelineConfig();
+    private final PipelineConfig pipelineConfig;
     private final HttpClient httpClient;
-    private final String clientId = pipelineConfig.getClientId();
-    private final String clientSecret = pipelineConfig.getClientSecret();
-    private final String tokenUrl = pipelineConfig.getTokenUrl();
 
-    public SpotifyAuthenticator(HttpClient httpClient) {
+    public SpotifyAuthenticator(HttpClient httpClient, PipelineConfig pipelineConfig) {
         this.httpClient = httpClient;
+        this.pipelineConfig = pipelineConfig;
     }
 
     public Optional<String> getAccessToken() {
+        String clientId = pipelineConfig.getClientId();
+        String clientSecret = pipelineConfig.getClientSecret();
+        String tokenUrl = pipelineConfig.getTokenUrl();
 
         String auth = String.format("%s:%s", clientId, clientSecret);
         String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
