@@ -16,7 +16,7 @@ import java.util.Optional;
 
 public class SpotifyAuthenticator {
 
-    private final PipelineConfig pipelineConfig = PipelineConfig.getInstance();
+    private final PipelineConfig pipelineConfig = new PipelineConfig();
     private final HttpClient httpClient;
     private final String clientId = pipelineConfig.getClientId();
     private final String clientSecret = pipelineConfig.getClientSecret();
