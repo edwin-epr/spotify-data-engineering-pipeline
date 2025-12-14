@@ -14,12 +14,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Optional;
 
-public class SpotifyAuthenticator {
+public class SpotifyAuthorization {
 
     private final PipelineConfig pipelineConfig;
     private final HttpClient httpClient;
 
-    public SpotifyAuthenticator(HttpClient httpClient, PipelineConfig pipelineConfig) {
+    public SpotifyAuthorization(HttpClient httpClient, PipelineConfig pipelineConfig) {
         this.httpClient = httpClient;
         this.pipelineConfig = pipelineConfig;
     }
@@ -29,16 +29,16 @@ public class SpotifyAuthenticator {
         String clientSecret = pipelineConfig.getClientSecret();
         String tokenUrl = pipelineConfig.getTokenUrl();
 
-        String auth = String.format("%s:%s", clientId, clientSecret);
-        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+        String credentials = String.format("%s:%s", clientId, clientSecret);
+        String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
 
-        String body = "grant_type=client_credentials";
+        String grantType = "grant_type=client_credentials";
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(tokenUrl))
-                .header("Authorization", String.format("Basic %s", encodedAuth))
+                .header("Authorization", String.format("Basic %s", encodedCredentials))
                 .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .POST(HttpRequest.BodyPublishers.ofString(grantType))
                 .build();
 
         try {

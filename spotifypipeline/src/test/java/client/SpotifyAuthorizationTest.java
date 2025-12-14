@@ -1,6 +1,6 @@
 package client;
 
-import com.edwsoft.client.SpotifyAuthenticator;
+import com.edwsoft.client.SpotifyAuthorization;
 import com.edwsoft.config.PipelineConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class SpotifyAuthenticatorTest {
+public class SpotifyAuthorizationTest {
 
     @Mock
     HttpClient httpClient;
@@ -31,11 +31,11 @@ public class SpotifyAuthenticatorTest {
     @Mock
     PipelineConfig pipelineConfig;
 
-    SpotifyAuthenticator spotifyAuthenticator;
+    SpotifyAuthorization spotifyAuthorization;
 
     @BeforeEach
     public void setup() {
-        spotifyAuthenticator = new SpotifyAuthenticator(httpClient, pipelineConfig);
+        spotifyAuthorization = new SpotifyAuthorization(httpClient, pipelineConfig);
         when(pipelineConfig.getClientId()).thenReturn("test-client-id");
         when(pipelineConfig.getClientSecret()).thenReturn("test-client-secret");
         when(pipelineConfig.getTokenUrl()).thenReturn("https://accounts.spotify.com/api/token");
@@ -50,7 +50,7 @@ public class SpotifyAuthenticatorTest {
         when(httpClient.send(any(HttpRequest.class), ArgumentMatchers.<HttpResponse.BodyHandler<String>> any()))
                 .thenReturn(httpResponse);
 
-        Optional<String> token = spotifyAuthenticator.getAccessToken();
+        Optional<String> token = spotifyAuthorization.getAccessToken();
 
         assertTrue(token.isPresent());
         assertFalse(token.get().isEmpty());
@@ -64,7 +64,7 @@ public class SpotifyAuthenticatorTest {
         when(httpClient.send(any(HttpRequest.class), ArgumentMatchers.<HttpResponse.BodyHandler<String>> any()))
                 .thenReturn(httpResponse);
 
-        Optional<String> token = spotifyAuthenticator.getAccessToken();
+        Optional<String> token = spotifyAuthorization.getAccessToken();
 
         assertTrue(token.isEmpty());
     }
@@ -75,7 +75,7 @@ public class SpotifyAuthenticatorTest {
         when(httpClient.send(any(HttpRequest.class), ArgumentMatchers.<HttpResponse.BodyHandler<String>> any()))
                 .thenThrow(new InterruptedException("Thread interrupted"));
 
-        Optional<String> token = spotifyAuthenticator.getAccessToken();
+        Optional<String> token = spotifyAuthorization.getAccessToken();
 
         assertTrue(token.isEmpty());
     }
@@ -86,7 +86,7 @@ public class SpotifyAuthenticatorTest {
         when(httpClient.send(any(HttpRequest.class), ArgumentMatchers.<HttpResponse.BodyHandler<String>> any()))
                 .thenThrow(new IOException("Network error"));
 
-        Optional<String> token = spotifyAuthenticator.getAccessToken();
+        Optional<String> token = spotifyAuthorization.getAccessToken();
 
         assertFalse(token.isPresent());
     }
