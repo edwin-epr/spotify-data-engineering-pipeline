@@ -1,9 +1,9 @@
 package com.edwsoft.client;
 
 import com.edwsoft.config.PipelineConfig;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.net.URI;
@@ -55,7 +55,7 @@ public class SpotifyAuthorization {
 
             return Optional
                     .ofNullable(json.get("access_token"))
-                    .map(JsonNode::asString)
+                    .map(JsonNode::asText)
                     .filter(token -> !token.isEmpty());
 
         } catch (IOException e) {

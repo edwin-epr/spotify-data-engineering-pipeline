@@ -1,10 +1,10 @@
 package com.edwsoft.processor;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import tools.jackson.databind.JsonNode;
 
 import java.util.Collections;
 import java.util.Optional;

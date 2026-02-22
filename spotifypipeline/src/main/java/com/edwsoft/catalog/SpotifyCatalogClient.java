@@ -2,10 +2,10 @@ package com.edwsoft.catalog;
 
 import com.edwsoft.client.SpotifyApiClient;
 import com.edwsoft.processor.SpotifyDataProcessor;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import tools.jackson.databind.JsonNode;
 
 public class SpotifyCatalogClient {
     private final SpotifyApiClient spotifyApiClient;

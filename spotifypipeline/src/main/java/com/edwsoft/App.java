@@ -8,7 +8,6 @@ import com.edwsoft.processor.SpotifyDataProcessor;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import tools.jackson.databind.JsonNode;
 
 import java.net.http.HttpClient;
 import java.util.List;
