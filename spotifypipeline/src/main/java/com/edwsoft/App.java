@@ -50,7 +50,7 @@ public class App
 //          System.out.println("Track name: " + track.get("name").asString());
 //          Dataset<Row> dataset = SpotifyDataProcessor.jsonToDataFrame(track, sparkSession);
 //          dataset.show();
-            Dataset<Row> rowDataset = spotifyClient.processPlaylist("2RWNplLmiMBsYtE3MWPIQy");
+            Dataset<Row> rowDataset = spotifyClient.processPlaylist("1qtUv9fHzbQG9KMMzKfMgl");
             rowDataset.show();
         }
     }
