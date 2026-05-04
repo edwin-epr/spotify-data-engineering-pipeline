@@ -51,7 +51,10 @@ public class App
 //          Dataset<Row> dataset = SpotifyDataProcessor.jsonToDataFrame(track, sparkSession);
 //          dataset.show();
             Dataset<Row> rowDataset = spotifyClient.processPlaylist("1qtUv9fHzbQG9KMMzKfMgl");
-            rowDataset.show();
+//            rowDataset.printSchema();
+            Dataset<Row> artistsDataset = spotifyClient.getArtistsNameIds("1qtUv9fHzbQG9KMMzKfMgl");
+            artistsDataset.printSchema();
+            artistsDataset.show();
         }
     }
 }

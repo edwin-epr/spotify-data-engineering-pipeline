@@ -35,15 +35,25 @@ public class SpotifyCatalogClient {
 
         JsonMapper mapper = new JsonMapper();
         ArrayNode tracks = mapper.createArrayNode();
-        items.forEach(item -> {
-            JsonNode track = item.get("track");
-            if(!Objects.isNull(track) && !track.isNull()) {
-                tracks.add(track);
+        items.forEach(itemObject -> {
+            JsonNode item = itemObject.get("item");
+            if(!Objects.isNull(item) && !item.isNull()) {
+                tracks.add(item);
             }
         });
 
         return SpotifyDataProcessor.jsonToDataFrame(tracks, sparkSession);
     }
 
+    public Dataset<Row> getArtistsNameIds(String playlistsId) {
+        Dataset<Row> artistsMatched = processPlaylist(playlistsId).selectExpr(
+                "inline(arrays_zip(artists.id, artists.name)) as (artist_id, artist_name)"
+        ).select(
+                "artist_id",
+                "artist_name"
+        );
+
+        return artistsMatched;
+    }
 
 }
