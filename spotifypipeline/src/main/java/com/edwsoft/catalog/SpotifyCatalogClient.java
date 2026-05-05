@@ -10,6 +10,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.functions;
 
+import java.util.List;
 import java.util.Objects;
 
 public class SpotifyCatalogClient {
@@ -72,6 +73,19 @@ public class SpotifyCatalogClient {
         );
 
         return playlists;
+    }
+
+    public Dataset<Row> getAlbums(List<String> albumsIds) {
+        Dataset<Row> albums = spotifyApiClient.fetchBatchJson("albums", albumsIds)
+                .select(
+                        functions.col("name").alias("album_name"),
+                        functions.col("release_date"),
+                        functions.col("type"),
+                        functions.col("artists.name").getItem(0).alias("artist_name"),
+                        functions.explode(functions.col("tracks.items.id")).alias("track_id"),
+                        functions.col("popularity")
+                );
+        return albums;
     }
 
 }

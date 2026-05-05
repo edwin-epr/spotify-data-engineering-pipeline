@@ -10,6 +10,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 import java.net.http.HttpClient;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -56,7 +58,11 @@ public class App
 //            artistsDataset.printSchema();
 //            artistsDataset.show();
             Dataset<Row> playlistDataset = spotifyClient.getPlaylists("1qtUv9fHzbQG9KMMzKfMgl");
-            playlistDataset.show();
+//            playlistDataset.show();
+            List<String> albumsIds = Arrays.asList("4iDsJtesBbWiGaarx04mVO","4zSeBpHmi7WGKDYYkqZWjf");
+            Dataset<Row> albumsDataset = spotifyClient.getAlbums(albumsIds);
+            albumsDataset.printSchema();
+            albumsDataset.show();
         }
     }
 }
