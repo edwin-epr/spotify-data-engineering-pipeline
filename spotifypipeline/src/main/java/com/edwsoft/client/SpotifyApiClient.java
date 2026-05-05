@@ -83,10 +83,21 @@ public class SpotifyApiClient {
 
     public Dataset<Row> fetchBatchJson(String endpoint, List<String> spotifyIds) {
         List<String> items = spotifyIds.stream()
-                .map(spotifyId -> fetchJson(endpoint, spotifyId))
+                .map(spotifyId -> {
+                    try {
+                        return fetchJson(endpoint, spotifyId);
+                    } catch (HttpException e) {
+                        System.out.printf("Failed to fetch %s/%s: %s%n", endpoint, spotifyId, e.getMessage());
+                        return createEmptyJsonObject();
+                    }
+                })
                 .filter(jsonNode -> !jsonNode.isEmpty())
                 .map(JsonNode::toString)
                 .toList();
+        
+        if (items.isEmpty()) {
+            return sparkSession.emptyDataFrame();
+        }
 
         Dataset<String> stringDataset = sparkSession.createDataset(items, Encoders.STRING());
         return sparkSession.read().json(stringDataset);
