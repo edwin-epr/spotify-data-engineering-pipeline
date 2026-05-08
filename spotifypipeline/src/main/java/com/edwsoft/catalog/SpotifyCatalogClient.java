@@ -52,9 +52,9 @@ public class SpotifyCatalogClient {
         return SpotifyDataProcessor.jsonToDataFrame(tracks, sparkSession);
     }
 
-    public Dataset<Row> getArtistsNameIds(String playlistsId) {
+    public Dataset<Row> getArtistsNameIds(String playlistsId, Dataset<Row> processedPlaylist) {
         logger.info("Getting artists names from playlist: {}.", playlistsId);
-        Dataset<Row> artistsMatched = processPlaylist(playlistsId).selectExpr(
+        Dataset<Row> artistsMatched = processedPlaylist.selectExpr(
                 "inline(arrays_zip(artists.id, artists.name)) as (artist_id, artist_name)"
         ).select(
                 "artist_id",
@@ -64,9 +64,9 @@ public class SpotifyCatalogClient {
         return artistsMatched;
     }
 
-    public Dataset<Row> getPlaylists(String playlistId) {
+    public Dataset<Row> getPlaylistsMetadata(String playlistId, Dataset<Row> processedPlaylist) {
         logger.info("Getting playlists metadata from playlist: {}.", playlistId);
-        Dataset<Row> playlists = processPlaylist(playlistId).select(
+        Dataset<Row> playlists = processedPlaylist.select(
                 functions.col("album.album_type"),
                 functions.col("album.id").alias("album_id"),
                 functions.col("album.name").alias("album_name"),
