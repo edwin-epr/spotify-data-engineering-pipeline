@@ -9,11 +9,14 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.functions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
 
 public class SpotifyCatalogClient {
+    private static final Logger logger = LoggerFactory.getLogger(SpotifyCatalogClient.class);
     private final SpotifyApiClient spotifyApiClient;
     private final SparkSession sparkSession;
 
@@ -23,6 +26,7 @@ public class SpotifyCatalogClient {
     }
 
     public Dataset<Row> processPlaylist(String playlistId) {
+        logger.info("Processing playlist {}", playlistId);
         String endpoint = String.format("playlists/%s/items", playlistId);
         JsonNode playlist = spotifyApiClient.fetchJson(endpoint);
         JsonNode items =  playlist.get("items");
@@ -44,10 +48,12 @@ public class SpotifyCatalogClient {
             }
         });
 
+        logger.info("Extracted {} tracks from playlist: {}.", tracks.size(), playlistId);
         return SpotifyDataProcessor.jsonToDataFrame(tracks, sparkSession);
     }
 
     public Dataset<Row> getArtistsNameIds(String playlistsId) {
+        logger.info("Getting artists names from playlist: {}.", playlistsId);
         Dataset<Row> artistsMatched = processPlaylist(playlistsId).selectExpr(
                 "inline(arrays_zip(artists.id, artists.name)) as (artist_id, artist_name)"
         ).select(
@@ -59,6 +65,7 @@ public class SpotifyCatalogClient {
     }
 
     public Dataset<Row> getPlaylists(String playlistId) {
+        logger.info("Getting playlists metadata from playlist: {}.", playlistId);
         Dataset<Row> playlists = processPlaylist(playlistId).select(
                 functions.col("album.album_type"),
                 functions.col("album.id").alias("album_id"),
@@ -76,6 +83,7 @@ public class SpotifyCatalogClient {
     }
 
     public Dataset<Row> getAlbums(List<String> albumsIds) {
+        logger.info("Getting albums metadata from {} albums.", albumsIds.size());
         Dataset<Row> albums = spotifyApiClient.fetchBatchJson("albums", albumsIds)
                 .select(
                         functions.col("name").alias("album_name"),

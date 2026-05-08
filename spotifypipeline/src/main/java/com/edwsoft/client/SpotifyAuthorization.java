@@ -4,6 +4,8 @@ import com.edwsoft.config.PipelineConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -15,7 +17,7 @@ import java.util.Base64;
 import java.util.Optional;
 
 public class SpotifyAuthorization {
-
+    private static final Logger logger = LoggerFactory.getLogger(SpotifyAuthorization.class);
     private final PipelineConfig pipelineConfig;
     private final HttpClient httpClient;
 
@@ -45,8 +47,7 @@ public class SpotifyAuthorization {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                System.out.printf("Failed to retrieve data due to the status code: %d.%n",
-                        response.statusCode());
+                logger.error("Failed to retrieve data due to the status code: {}.", response.statusCode());
                 return Optional.empty();
             }
 
@@ -59,10 +60,10 @@ public class SpotifyAuthorization {
                     .filter(token -> !token.isEmpty());
 
         } catch (IOException e) {
-            System.out.printf("I/O error: %s%n", e.getMessage());
+            logger.error("I/O error: {}.", e.getMessage(), e);
             return Optional.empty();
         } catch (InterruptedException e) {
-            System.out.printf("Interruption error: %s%n", e.getMessage());
+            logger.error("Interruption error: {}.", e.getMessage(), e);
             return Optional.empty();
         }
 

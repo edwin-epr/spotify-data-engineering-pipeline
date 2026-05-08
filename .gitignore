@@ -40,3 +40,6 @@ build/
 
 ### Environment Variables ###
 set-spotify-env.sh
+
+### Logs
+logs/

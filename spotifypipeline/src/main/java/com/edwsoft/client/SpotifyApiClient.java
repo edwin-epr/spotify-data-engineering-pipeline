@@ -1,5 +1,6 @@
 package com.edwsoft.client;
 
+import com.edwsoft.config.PipelineConfig;
 import com.edwsoft.exceptions.HttpException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -7,6 +8,8 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -18,21 +21,24 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class SpotifyApiClient {
-
+    private static final Logger logger = LoggerFactory.getLogger(SpotifyApiClient.class);
     private final HttpClient httpClient;
     private final SpotifyAuthorization spotifyAuthorization;
     private final SparkSession sparkSession;
-    private final String baseUrl = System.getenv("SPOTIFY_BASE_URL");
+    private final PipelineConfig pipelineConfig;
 
-    public SpotifyApiClient(HttpClient httpClient, SpotifyAuthorization spotifyAuthorization, SparkSession sparkSession) {
+    public SpotifyApiClient(HttpClient httpClient, SpotifyAuthorization spotifyAuthorization, SparkSession sparkSession,
+                            PipelineConfig pipelineConfig) {
         this.httpClient = httpClient;
         this.spotifyAuthorization = spotifyAuthorization;
         this.sparkSession = sparkSession;
+        this.pipelineConfig = pipelineConfig;
     }
 
     public JsonNode fetchJson(String endpoint, String spotifyId, Map<String, String> params) {
 
         Objects.requireNonNull(endpoint, "Endpoint must not be null");
+        String baseUrl = pipelineConfig.getBaseUrl();
         String buildUri = String.format("%s/%s", baseUrl, endpoint);
 
         if (spotifyId != null && !spotifyId.isEmpty()) {
@@ -63,10 +69,10 @@ public class SpotifyApiClient {
             return mapper.readTree(response.body());
 
         } catch (IOException e) {
-            System.out.printf("I/O Error: %s%n", e.getMessage());
+            logger.error("I/O Error: {}", e.getMessage(), e);
             return createEmptyJsonObject();
         } catch (InterruptedException e) {
-            System.out.printf("Interrupted Error: %s%n", e.getMessage());
+            logger.error("Interrupted Error: {}", e.getMessage(), e);
             return createEmptyJsonObject();
         }
     }
@@ -87,7 +93,7 @@ public class SpotifyApiClient {
                     try {
                         return fetchJson(endpoint, spotifyId);
                     } catch (HttpException e) {
-                        System.out.printf("Failed to fetch %s/%s: %s%n", endpoint, spotifyId, e.getMessage());
+                        logger.error("Failed to fetch {}/{}: {}", endpoint, spotifyId, e.getMessage(), e);
                         return createEmptyJsonObject();
                     }
                 })
@@ -100,7 +106,9 @@ public class SpotifyApiClient {
         }
 
         Dataset<String> stringDataset = sparkSession.createDataset(items, Encoders.STRING());
-        return sparkSession.read().json(stringDataset);
+        Dataset<Row> dataset = sparkSession.read().json(stringDataset);
+        logger.info("Fetched {}/{} items successfully from endpoint: {}.", items.size(), spotifyIds.size(), endpoint);
+        return dataset;
     }
 
     private URI buildUriWithParams(String uri, Map<String, String> params) {
