@@ -29,7 +29,7 @@ public class App
                     .appName("SpotifyDEProject")
                     .master("local[*]")
                     .getOrCreate();
-            SpotifyApiClient spotifyApiClient = new SpotifyApiClient(client, spotifyAuthorization, sparkSession);
+            SpotifyApiClient spotifyApiClient = new SpotifyApiClient(client, spotifyAuthorization, sparkSession, pipelineConfig);
             SpotifyCatalogClient spotifyClient = new SpotifyCatalogClient(spotifyApiClient, sparkSession);
             // Probar token
 //            String gat = spotifyAuthorization.getAccessToken().orElse("No funcionó");
@@ -52,12 +52,12 @@ public class App
 //          System.out.println("Track name: " + track.get("name").asString());
 //          Dataset<Row> dataset = SpotifyDataProcessor.jsonToDataFrame(track, sparkSession);
 //          dataset.show();
-            Dataset<Row> rowDataset = spotifyClient.processPlaylist("1qtUv9fHzbQG9KMMzKfMgl");
+//            Dataset<Row> rowDataset = spotifyClient.processPlaylist("1qtUv9fHzbQG9KMMzKfMgl");
 //            rowDataset.printSchema();
-            Dataset<Row> artistsDataset = spotifyClient.getArtistsNameIds("1qtUv9fHzbQG9KMMzKfMgl");
+//            Dataset<Row> artistsDataset = spotifyClient.getArtistsNameIds("1qtUv9fHzbQG9KMMzKfMgl");
 //            artistsDataset.printSchema();
 //            artistsDataset.show();
-            Dataset<Row> playlistDataset = spotifyClient.getPlaylists("1qtUv9fHzbQG9KMMzKfMgl");
+//            Dataset<Row> playlistDataset = spotifyClient.getPlaylists("1qtUv9fHzbQG9KMMzKfMgl");
 //            playlistDataset.show();
             List<String> albumsIds = Arrays.asList("4iDsJtesBbWiGaarx04mVO","4zSeBpHmi7WGKDYYkqZWjf");
             Dataset<Row> albumsDataset = spotifyClient.getAlbums(albumsIds);
