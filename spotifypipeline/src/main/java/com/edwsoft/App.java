@@ -52,17 +52,17 @@ public class App
 //          System.out.println("Track name: " + track.get("name").asString());
 //          Dataset<Row> dataset = SpotifyDataProcessor.jsonToDataFrame(track, sparkSession);
 //          dataset.show();
-//            Dataset<Row> rowDataset = spotifyClient.processPlaylist("1qtUv9fHzbQG9KMMzKfMgl");
-//            rowDataset.printSchema();
-//            Dataset<Row> artistsDataset = spotifyClient.getArtistsNameIds("1qtUv9fHzbQG9KMMzKfMgl");
-//            artistsDataset.printSchema();
+            Dataset<Row> processedPlaylist = spotifyClient.processPlaylist("1qtUv9fHzbQG9KMMzKfMgl");
+//            Dataset<Row> artistsDataset = spotifyClient.getArtistsNameIds("1qtUv9fHzbQG9KMMzKfMgl", processedPlaylist);
 //            artistsDataset.show();
-//            Dataset<Row> playlistDataset = spotifyClient.getPlaylists("1qtUv9fHzbQG9KMMzKfMgl");
-//            playlistDataset.show();
-            List<String> albumsIds = Arrays.asList("4iDsJtesBbWiGaarx04mVO","4zSeBpHmi7WGKDYYkqZWjf");
-            Dataset<Row> albumsDataset = spotifyClient.getAlbums(albumsIds);
-            albumsDataset.printSchema();
-            albumsDataset.show();
+//            Dataset<Row> playlistMetadataDataset = spotifyClient.getPlaylistsMetadata("1qtUv9fHzbQG9KMMzKfMgl", processedPlaylist);
+//            playlistMetadataDataset.show();
+//            List<String> albumsIds = Arrays.asList("4iDsJtesBbWiGaarx04mVO","4zSeBpHmi7WGKDYYkqZWjf");
+//            Dataset<Row> albumsDataset = spotifyClient.getAlbums(albumsIds);
+//            albumsDataset.printSchema();
+//            albumsDataset.show();
+            Dataset<Row> albumsFromPlaylist = spotifyClient.getAlbumsFromPlaylists("1qtUv9fHzbQG9KMMzKfMgl", processedPlaylist);
+            albumsFromPlaylist.show();
         }
     }
 }

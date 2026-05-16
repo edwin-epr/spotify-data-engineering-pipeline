@@ -5,10 +5,7 @@ import com.edwsoft.processor.SpotifyDataProcessor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.functions;
+import org.apache.spark.sql.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +23,7 @@ public class SpotifyCatalogClient {
     }
 
     public Dataset<Row> processPlaylist(String playlistId) {
-        logger.info("Processing playlist {}", playlistId);
+        logger.info("Processing playlist id: {}.", playlistId);
         String endpoint = String.format("playlists/%s/items", playlistId);
         JsonNode playlist = spotifyApiClient.fetchJson(endpoint);
         JsonNode items =  playlist.get("items");
@@ -48,12 +45,12 @@ public class SpotifyCatalogClient {
             }
         });
 
-        logger.info("Extracted {} tracks from playlist: {}.", tracks.size(), playlistId);
+        logger.info("Extracted {} tracks from playlist id: {}.", tracks.size(), playlistId);
         return SpotifyDataProcessor.jsonToDataFrame(tracks, sparkSession);
     }
 
     public Dataset<Row> getArtistsNameIds(String playlistsId, Dataset<Row> processedPlaylist) {
-        logger.info("Getting artists names from playlist: {}.", playlistsId);
+        logger.info("Getting artists names from playlist id: {}.", playlistsId);
         Dataset<Row> artistsMatched = processedPlaylist.selectExpr(
                 "inline(arrays_zip(artists.id, artists.name)) as (artist_id, artist_name)"
         ).select(
@@ -65,7 +62,7 @@ public class SpotifyCatalogClient {
     }
 
     public Dataset<Row> getPlaylistsMetadata(String playlistId, Dataset<Row> processedPlaylist) {
-        logger.info("Getting playlists metadata from playlist: {}.", playlistId);
+        logger.info("Getting playlists metadata from playlist id: {}.", playlistId);
         Dataset<Row> playlists = processedPlaylist.select(
                 functions.col("album.album_type"),
                 functions.col("album.id").alias("album_id"),
@@ -93,6 +90,23 @@ public class SpotifyCatalogClient {
                         functions.explode(functions.col("tracks.items.id")).alias("track_id"),
                         functions.col("popularity")
                 );
+        return albums;
+    }
+
+    public Dataset<Row> getAlbumsFromPlaylists(String playlistsIds, Dataset<Row> processedPlaylist) {
+        logger.info("Getting albums from playlist id: {}.", playlistsIds);
+
+        List<String> albumsIds = getPlaylistsMetadata(playlistsIds, processedPlaylist)
+                .select("album_id")
+                .as(Encoders.STRING())
+                .collectAsList();
+
+        logger.info("Found {} albums in playlist id: {}.", albumsIds.size(), playlistsIds);
+
+        Dataset<Row> albums = getAlbums(albumsIds).distinct();
+
+        logger.info("Returning {} distinct albums from playlist id: {}.", albums.count(), playlistsIds);
+
         return albums;
     }
 
