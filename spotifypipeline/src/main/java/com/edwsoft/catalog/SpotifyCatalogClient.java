@@ -110,4 +110,16 @@ public class SpotifyCatalogClient {
         return albums;
     }
 
+    public List<String> getTracksList(String playlistId, Dataset<Row> processedPlaylist) {
+        logger.info("Getting tracks from playlist id: {}.", playlistId);
+
+        List<String> tracksList = getAlbumsFromPlaylists(playlistId, processedPlaylist)
+                .select("track_id")
+                .as(Encoders.STRING())
+                .collectAsList();
+
+        logger.info("Found {} tracks in playlist id: {}.", tracksList.size(), playlistId);
+        return tracksList;
+    }
+
 }
