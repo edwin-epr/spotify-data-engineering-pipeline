@@ -79,8 +79,8 @@ public class SpotifyCatalogClient {
         return playlists;
     }
 
-    public Dataset<Row> getAlbums(List<String> albumsIds) {
-        logger.info("Getting albums metadata from {} albums.", albumsIds.size());
+    public Dataset<Row> getAlbumTracks(List<String> albumsIds) {
+        logger.info("Getting tracks from {} albums.", albumsIds.size());
         Dataset<Row> albums = spotifyApiClient.fetchBatchJson("albums", albumsIds)
                 .select(
                         functions.col("name").alias("album_name"),
@@ -90,11 +90,14 @@ public class SpotifyCatalogClient {
                         functions.explode(functions.col("tracks.items.id")).alias("track_id"),
                         functions.col("popularity")
                 );
+
+        logger.debug("Returning {} tracks from {} albums.", albums.count(), albumsIds.size());
+
         return albums;
     }
 
-    public Dataset<Row> getAlbumsFromPlaylists(String playlistsIds, Dataset<Row> processedPlaylist) {
-        logger.info("Getting albums from playlist id: {}.", playlistsIds);
+    public Dataset<Row> getAlbumTracksFromPlaylists(String playlistsIds, Dataset<Row> processedPlaylist) {
+        logger.info("Getting album tracks from playlist id: {}.", playlistsIds);
 
         List<String> albumsIds = getPlaylistsMetadata(playlistsIds, processedPlaylist)
                 .select("album_id")
@@ -103,9 +106,9 @@ public class SpotifyCatalogClient {
 
         logger.info("Found {} albums in playlist id: {}.", albumsIds.size(), playlistsIds);
 
-        Dataset<Row> albums = getAlbums(albumsIds).distinct();
+        Dataset<Row> albums = getAlbumTracks(albumsIds).distinct();
 
-        logger.info("Returning {} distinct albums from playlist id: {}.", albums.count(), playlistsIds);
+        logger.info("Returning {} distinct tracks from playlist id: {}.", albums.count(), playlistsIds);
 
         return albums;
     }
@@ -113,7 +116,7 @@ public class SpotifyCatalogClient {
     public List<String> getTracksList(String playlistId, Dataset<Row> processedPlaylist) {
         logger.info("Getting tracks from playlist id: {}.", playlistId);
 
-        List<String> tracksList = getAlbumsFromPlaylists(playlistId, processedPlaylist)
+        List<String> tracksList = getAlbumTracksFromPlaylists(playlistId, processedPlaylist)
                 .select("track_id")
                 .as(Encoders.STRING())
                 .collectAsList();
