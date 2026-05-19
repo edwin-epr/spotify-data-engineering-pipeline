@@ -125,4 +125,14 @@ public class SpotifyCatalogClient {
         return tracksList;
     }
 
+    public Dataset<Row> getTracks(List<String> tracksList) {
+       logger.info("Getting {} tracks.", tracksList.size());
+
+       Dataset<Row> tracks = spotifyApiClient.fetchBatchJson("tracks", tracksList);
+
+       logger.debug("Returning {} tracks successfully.", tracks.count());
+
+       return tracks;
+    }
+
 }
