@@ -83,6 +83,7 @@ public class SpotifyCatalogClient {
         logger.info("Getting tracks from {} albums.", albumsIds.size());
         Dataset<Row> albums = spotifyApiClient.fetchBatchJson("albums", albumsIds)
                 .select(
+                        functions.col("id").alias("album_id"),
                         functions.col("name").alias("album_name"),
                         functions.col("release_date"),
                         functions.col("type"),
