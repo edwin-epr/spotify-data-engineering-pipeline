@@ -5,6 +5,7 @@ import com.edwsoft.processor.SpotifyDataProcessor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.univocity.parsers.common.processor.RowWriterProcessor;
 import org.apache.spark.sql.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,10 +115,10 @@ public class SpotifyCatalogClient {
         return albums;
     }
 
-    public List<String> getTracksList(String playlistId, Dataset<Row> processedPlaylist) {
+    public List<String> getTracksList(String playlistId, Dataset<Row> albumTracks) {
         logger.info("Getting tracks from playlist id: {}.", playlistId);
 
-        List<String> tracksList = getAlbumTracksFromPlaylists(playlistId, processedPlaylist)
+        List<String> tracksList = albumTracks
                 .select("track_id")
                 .as(Encoders.STRING())
                 .collectAsList();
@@ -134,6 +135,33 @@ public class SpotifyCatalogClient {
        logger.debug("Returning {} tracks successfully.", tracks.count());
 
        return tracks;
+    }
+
+    public Dataset<Row> getAlbumsTracksBasedOnPlaylist(String playlistId, Dataset<Row> albumTracks, List<String> tracksList) {
+        logger.info("Getting albums tracks based on playlist id: {}.", playlistId);
+
+        Dataset<Row> tracks = getTracks(tracksList);
+
+        Dataset<Row> albumsTracksJoined = albumTracks.join(
+                tracks,
+                albumTracks.col("track_id").equalTo(tracks.col("id")),
+                "inner"
+        ).drop(albumTracks.col("popularity"));
+
+        Dataset<Row> albumsTracksJoinedCompleted = albumsTracksJoined.select(
+                functions.col("album_name"),
+                functions.col("release_date"),
+                functions.col("artist_name"),
+                functions.col("track_id"),
+                functions.col("name").alias("track_name"),
+                functions.col("duration_ms").divide(1000).alias("duration_seconds"),
+                functions.col("popularity"),
+                functions.col("track_number")
+        );
+        logger.info("Album tracks join completed for playlist id: {}.", playlistId);
+        logger.debug("Returning {} joined album tracks from playlist id: {}.", albumsTracksJoinedCompleted.count(), playlistId);
+        return albumsTracksJoinedCompleted;
+
     }
 
 }
