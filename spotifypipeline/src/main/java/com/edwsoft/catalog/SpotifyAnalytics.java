@@ -36,4 +36,22 @@ public class SpotifyAnalytics {
                 .orderBy(functions.desc("track_count"))
                 .limit(5);
     }
+
+    public Dataset<Row> getTrackFeatures(Dataset<Row> albumTracks) {
+        logger.info("Extracting track features from album tracks.");
+
+        return albumTracks.select(
+                functions.col("track_id"),
+                functions.col("track_name"),
+                functions.col("artist_name"),
+                functions.col("album_name"),
+                functions.col("release_date"),
+                functions.col("duration_seconds"),
+                functions.col("popularity"),
+                functions.col("track_number"),
+                functions.year(functions.to_date(
+                        functions.col("release_date"), "yyyy-MM-dd"))
+                        .alias("release_year")
+        );
+    }
 }
