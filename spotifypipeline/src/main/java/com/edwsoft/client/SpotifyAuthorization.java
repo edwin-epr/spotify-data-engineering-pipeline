@@ -18,6 +18,7 @@ import java.util.Optional;
 
 public class SpotifyAuthorization {
     private static final Logger logger = LoggerFactory.getLogger(SpotifyAuthorization.class);
+    private static final ObjectMapper MAPPER = new JsonMapper();
     private final PipelineConfig pipelineConfig;
     private final HttpClient httpClient;
 
@@ -51,8 +52,7 @@ public class SpotifyAuthorization {
                 return Optional.empty();
             }
 
-            ObjectMapper mapper = new JsonMapper();
-            JsonNode json = mapper.readTree(response.body());
+            JsonNode json = MAPPER.readTree(response.body());
 
             return Optional
                     .ofNullable(json.get("access_token"))

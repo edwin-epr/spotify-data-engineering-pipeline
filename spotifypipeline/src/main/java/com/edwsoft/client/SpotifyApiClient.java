@@ -22,6 +22,7 @@ import java.util.*;
 
 public class SpotifyApiClient {
     private static final Logger logger = LoggerFactory.getLogger(SpotifyApiClient.class);
+    private static final JsonMapper MAPPER = new JsonMapper();
     private final HttpClient httpClient;
     private final SpotifyAuthorization spotifyAuthorization;
     private final SparkSession sparkSession;
@@ -65,8 +66,7 @@ public class SpotifyApiClient {
                 throw new HttpException(response.statusCode(), response.body());
             }
 
-            JsonMapper mapper = new JsonMapper();
-            return mapper.readTree(response.body());
+            return MAPPER.readTree(response.body());
 
         } catch (IOException e) {
             logger.error("I/O Error: {}", e.getMessage(), e);
@@ -132,7 +132,6 @@ public class SpotifyApiClient {
     }
 
     private JsonNode createEmptyJsonObject() {
-        JsonMapper mapper = new JsonMapper();
-        return mapper.createObjectNode();
+        return MAPPER.createObjectNode();
     }
 }
