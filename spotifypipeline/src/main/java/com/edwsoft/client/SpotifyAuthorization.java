@@ -13,6 +13,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -21,13 +22,14 @@ public class SpotifyAuthorization {
     private static final ObjectMapper MAPPER = new JsonMapper();
     private final PipelineConfig pipelineConfig;
     private final HttpClient httpClient;
+    private Token accessToken = new Token("", Instant.MIN);
 
     public SpotifyAuthorization(HttpClient httpClient, PipelineConfig pipelineConfig) {
         this.httpClient = httpClient;
         this.pipelineConfig = pipelineConfig;
     }
 
-    public Optional<String> getAccessToken() {
+    public JsonNode fetchToken() {
         String clientId = pipelineConfig.getClientId();
         String clientSecret = pipelineConfig.getClientSecret();
         String tokenUrl = pipelineConfig.getTokenUrl();
@@ -49,23 +51,49 @@ public class SpotifyAuthorization {
 
             if (response.statusCode() != 200) {
                 logger.error("Failed to retrieve data due to the status code: {}.", response.statusCode());
-                return Optional.empty();
+                return MAPPER.createObjectNode();
             }
 
             JsonNode json = MAPPER.readTree(response.body());
-
-            return Optional
-                    .ofNullable(json.get("access_token"))
-                    .map(JsonNode::asText)
-                    .filter(token -> !token.isEmpty());
+            logger.debug("Successfully retrieved data due to the status code: {}.", response.statusCode());
+            return json;
 
         } catch (IOException e) {
             logger.error("I/O error: {}.", e.getMessage(), e);
-            return Optional.empty();
+            return MAPPER.createObjectNode();
         } catch (InterruptedException e) {
             logger.error("Interruption error: {}.", e.getMessage(), e);
+            return MAPPER.createObjectNode();
+        }
+    }
+
+    public Optional<String> getAccessToken() {
+        if (accessToken.isValid()) {
+            logger.debug("Returning cached token, expires at: {}", accessToken.expiresAt());
+            return Optional.ofNullable(accessToken.token());
+        }
+
+        logger.info("Fetching new access token.");
+        JsonNode json = fetchToken();
+
+        String token = Optional.ofNullable(json.get("access_token"))
+                .map(JsonNode::asText)
+                .filter(strToken -> !strToken.isEmpty())
+                .orElse("");
+
+        int expiresIn = Optional.ofNullable(json.get("expires_in"))
+                .map(JsonNode::asInt)
+                .orElse(0);
+
+        if (token.isEmpty()) {
+            logger.error("Access token not found in response.");
             return Optional.empty();
         }
 
+        accessToken = new Token(token, Instant.now().plusSeconds(expiresIn));
+        logger.info("New access token obtained, expires at: {}", accessToken.expiresAt());
+
+        return Optional.ofNullable(accessToken.token())
+                .filter(strObject -> !strObject.isEmpty());
     }
 }
