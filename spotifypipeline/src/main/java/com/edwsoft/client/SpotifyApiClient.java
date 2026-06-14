@@ -26,27 +26,21 @@ public class SpotifyApiClient {
     private final HttpClient httpClient;
     private final SpotifyAuthorization spotifyAuthorization;
     private final SparkSession sparkSession;
-    private final PipelineConfig pipelineConfig;
+    private final String normalizedBaseURL;
 
     public SpotifyApiClient(HttpClient httpClient, SpotifyAuthorization spotifyAuthorization, SparkSession sparkSession,
                             PipelineConfig pipelineConfig) {
         this.httpClient = httpClient;
         this.spotifyAuthorization = spotifyAuthorization;
         this.sparkSession = sparkSession;
-        this.pipelineConfig = pipelineConfig;
+        String rawBaseURL = pipelineConfig.getBaseUrl();
+        this.normalizedBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL : rawBaseURL + "/";
     }
 
     public JsonNode fetchJson(String endpoint, String spotifyId, Map<String, String> params) {
-
         Objects.requireNonNull(endpoint, "Endpoint must not be null");
-        String baseUrl = pipelineConfig.getBaseUrl();
-        String buildUri = String.format("%s/%s", baseUrl, endpoint);
 
-        if (spotifyId != null && !spotifyId.isEmpty()) {
-            buildUri = String.format("%s/%s", buildUri, spotifyId);
-        }
-
-        URI uri = buildUriWithParams(buildUri, params);
+        URI uri = buildURI(endpoint, spotifyId, params);
 
         String token = spotifyAuthorization
                 .getAccessToken()
@@ -78,13 +72,11 @@ public class SpotifyApiClient {
     }
 
     public JsonNode fetchJson(String endpoint, String spotifyId) {
-        return fetchJson(endpoint, spotifyId, new HashMap<>() {
-        });
+        return fetchJson(endpoint, spotifyId, Map.of());
     }
 
     public JsonNode fetchJson(String endpoint) {
-        return fetchJson(endpoint, null, new HashMap<>() {
-        });
+        return fetchJson(endpoint, null, Map.of());
     }
 
     public Dataset<Row> fetchBatchJson(String endpoint, List<String> spotifyIds) {
@@ -111,24 +103,43 @@ public class SpotifyApiClient {
         return dataset;
     }
 
-    private URI buildUriWithParams(String uri, Map<String, String> params) {
+    private URI addParamsToURI(StringBuilder uriBuilder, Map<String, String> params) {
         if (params == null || params.isEmpty()) {
-            return URI.create(uri);
+            return URI.create(uriBuilder.toString());
         }
 
-        StringBuilder stringBuilder = new StringBuilder(uri);
-        stringBuilder.setLength(stringBuilder.length() - 1); // Remove: /
+        uriBuilder.append("?");
 
-        stringBuilder.append("?");
-        params.forEach((key, value) -> stringBuilder
-                .append(URLEncoder.encode(key, StandardCharsets.UTF_8))
-                .append("=")
-                .append(URLEncoder.encode(value, StandardCharsets.UTF_8))
-                .append("&"));
+        boolean isFirstElement = true;
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (!isFirstElement) {
+                uriBuilder.append("&");
+            }
+            uriBuilder.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
+                    .append("=")
+                    .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+            isFirstElement = false;
+        }
 
-        stringBuilder.setLength(stringBuilder.length() - 1); // Remove: &
+        return URI.create(uriBuilder.toString());
+    }
 
-        return URI.create(stringBuilder.toString());
+    private URI buildURI(String endpoint, String spotifyId, Map<String, String> params) {
+
+        String normalizedEndpoint = endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
+
+        StringBuilder uriBuilder = new StringBuilder(normalizedBaseURL).append(normalizedEndpoint);
+
+        if (spotifyId != null && !spotifyId.isEmpty()) {
+            uriBuilder.append("/").append(spotifyId);
+        }
+
+        URI uri = addParamsToURI(uriBuilder, params);
+
+        logger.debug("Built URI: {}", uri);
+
+        return uri;
+
     }
 
     private JsonNode createEmptyJsonObject() {
