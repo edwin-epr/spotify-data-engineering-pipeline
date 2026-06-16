@@ -5,7 +5,6 @@ import com.edwsoft.processor.SpotifyDataProcessor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.univocity.parsers.common.processor.RowWriterProcessor;
 import org.apache.spark.sql.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,7 +97,7 @@ public class SpotifyCatalogClient {
         return albums;
     }
 
-    public Dataset<Row> getAlbumTracksFromPlaylists(String playlistsIds, Dataset<Row> processedPlaylist) {
+    public Dataset<Row> getDistinctTracksFromPlaylistAlbums(String playlistsIds, Dataset<Row> processedPlaylist) {
         logger.info("Getting album tracks from playlist id: {}.", playlistsIds);
 
         List<String> albumsIds = getPlaylistsMetadata(playlistsIds, processedPlaylist)
