@@ -5,15 +5,11 @@ import com.edwsoft.catalog.SpotifyCatalogClient;
 import com.edwsoft.client.SpotifyApiClient;
 import com.edwsoft.client.SpotifyAuthorization;
 import com.edwsoft.config.PipelineConfig;
-import com.edwsoft.processor.SpotifyDataProcessor;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
-import javax.xml.crypto.Data;
 import java.net.http.HttpClient;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -33,12 +29,17 @@ public class App
                     .getOrCreate();
             SpotifyApiClient spotifyApiClient = new SpotifyApiClient(client, spotifyAuthorization, sparkSession, pipelineConfig);
             SpotifyCatalogClient spotifyClient = new SpotifyCatalogClient(spotifyApiClient, sparkSession);
+            SpotifyAnalytics spotifyAnalytics = new SpotifyAnalytics();
             String playlistId = "1qtUv9fHzbQG9KMMzKfMgl";
             Dataset<Row> processedPlaylist = spotifyClient.processPlaylist(playlistId);
-            Dataset<Row> albumTracks = spotifyClient.getAlbumTracksFromPlaylists(playlistId, processedPlaylist);
-            List<String> tacksList = spotifyClient.getTracksList(playlistId, albumTracks);
-            Dataset<Row> tracksBasedOnPlaylist = spotifyClient.getAlbumsTracksBasedOnPlaylist(playlistId, albumTracks, tacksList);
-            tracksBasedOnPlaylist.show();
+
+            Dataset<Row> albumTracks = spotifyClient.getDistinctTracksFromPlaylistAlbums(playlistId, processedPlaylist);
+            List<String> tracksList = spotifyClient.getTracksList(playlistId, albumTracks);
+            Dataset<Row> fullAlbumsFromPlaylist = spotifyClient.getAlbumsTracksBasedOnPlaylist(playlistId, albumTracks, tracksList);
+            Dataset<Row> tracksFeatures = spotifyAnalytics.getTrackFeatures(fullAlbumsFromPlaylist);
+
+            fullAlbumsFromPlaylist.createOrReplaceTempView("full_albums");
+            tracksFeatures.createOrReplaceTempView("full_albums_with_tracks_features");
         }
     }
 }

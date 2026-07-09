@@ -42,33 +42,51 @@ public class SpotifyApiClient {
 
         URI uri = buildURI(endpoint, spotifyId, params);
 
-        String token = spotifyAuthorization
-                .getAccessToken()
-                .orElseThrow(() -> new RuntimeException("Failed to get access token"));
+        int maxRetries = 3;
+        int currentRetry = 0;
+        while (currentRetry < maxRetries) {
+            try {
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(uri)
-                .header("Authorization", String.format("Bearer %s", token))
-                .GET()
-                .build();
+                String token = spotifyAuthorization
+                        .getAccessToken()
+                        .orElseThrow(() -> new RuntimeException("Failed to get access token"));
 
-        try {
-            HttpResponse<String> response = httpClient
-                    .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(uri)
+                        .header("Authorization", String.format("Bearer %s", token))
+                        .GET()
+                        .build();
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new HttpException(response.statusCode(), response.body());
+                HttpResponse<String> response = httpClient
+                        .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+                if (response.statusCode() == 429) {
+                    long retryAfter = response.headers().firstValue("Retry-After")
+                            .map(Long::parseLong)
+                            .orElse(3L);
+
+                    logger.warn("Rate limit hit (429) for {}/{}. Waiting {} seconds before retry {}/{}...", endpoint, spotifyId, retryAfter, currentRetry + 1, maxRetries);
+                    Thread.sleep(retryAfter * 1000);
+                    currentRetry++;
+                    continue;
+                }
+                if (response.statusCode() < 200 || response.statusCode() > 299) {
+                    throw new HttpException(response.statusCode(), response.body());
+                }
+
+                return MAPPER.readTree(response.body());
+
+            } catch (IOException e) {
+                logger.error("I/O Error: {}", e.getMessage(), e);
+                return createEmptyJsonObject();
+            } catch (InterruptedException e) {
+                logger.error("Thread interrupted during retry for {}/{}.", endpoint, spotifyId, e);
+                Thread.currentThread().interrupt();
+                return createEmptyJsonObject();
             }
-
-            return MAPPER.readTree(response.body());
-
-        } catch (IOException e) {
-            logger.error("I/O Error: {}", e.getMessage(), e);
-            return createEmptyJsonObject();
-        } catch (InterruptedException e) {
-            logger.error("Interrupted Error: {}", e.getMessage(), e);
-            return createEmptyJsonObject();
         }
+       logger.error("Max retries ({}) reached for {}/{}. Skipping.", maxRetries, endpoint, spotifyId);
+        return createEmptyJsonObject();
     }
 
     public JsonNode fetchJson(String endpoint, String spotifyId) {
