@@ -20,7 +20,7 @@
     <logger name="org.apache.hadoop" level="WARN"/>
     <logger name="org.apache.parquet" level="WARN"/>
 
-    <logger name="com.edwsoft" level="${EDWSOFT_LOG_LEVEL:-DEBUG}"/>
+    <logger name="com.edwsoft" level="${EDWSOFT_LOG_LEVEL:-INFO}"/>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>

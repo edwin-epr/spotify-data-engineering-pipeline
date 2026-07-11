@@ -42,7 +42,7 @@ public class SpotifyApiClient {
 
         URI uri = buildURI(endpoint, spotifyId, params);
 
-        int maxRetries = 3;
+        int maxRetries = PipelineConfig.PIPELINE_MAX_HTTP_RETRIES;
         int currentRetry = 0;
         while (currentRetry < maxRetries) {
             try {
@@ -63,7 +63,7 @@ public class SpotifyApiClient {
                 if (response.statusCode() == 429) {
                     long retryAfter = response.headers().firstValue("Retry-After")
                             .map(Long::parseLong)
-                            .orElse(3L);
+                            .orElse(PipelineConfig.PIPELINE_DEFAULT_RETRY_AFTER_SEC);
 
                     logger.warn("Rate limit hit (429) for {}/{}. Waiting {} seconds before retry {}/{}...", endpoint, spotifyId, retryAfter, currentRetry + 1, maxRetries);
                     Thread.sleep(retryAfter * 1000);

@@ -30,7 +30,7 @@ public class App
             SpotifyApiClient spotifyApiClient = new SpotifyApiClient(client, spotifyAuthorization, sparkSession, pipelineConfig);
             SpotifyCatalogClient spotifyClient = new SpotifyCatalogClient(spotifyApiClient, sparkSession);
             SpotifyAnalytics spotifyAnalytics = new SpotifyAnalytics();
-            String playlistId = "1qtUv9fHzbQG9KMMzKfMgl";
+            String playlistId = "6kgjElb9E4Kf6tJUFWXQdB";
             Dataset<Row> processedPlaylist = spotifyClient.processPlaylist(playlistId);
 
             Dataset<Row> albumTracks = spotifyClient.getDistinctTracksFromPlaylistAlbums(playlistId, processedPlaylist);
