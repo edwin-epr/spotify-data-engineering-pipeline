@@ -14,6 +14,8 @@ public class PipelineConfig {
     private final String redirectUri;
     private final String baseUrl;
     private final String tokenUrl;
+    public static final int PIPELINE_MAX_HTTP_RETRIES=3;
+    public static final long PIPELINE_DEFAULT_RETRY_AFTER_SEC=3L;
 
     public PipelineConfig() {
         clientId = loadFromEnvironmentVariables("SPOTIFY_CLIENT_ID");
