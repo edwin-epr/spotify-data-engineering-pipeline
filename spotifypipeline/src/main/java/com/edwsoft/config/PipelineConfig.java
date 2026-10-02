@@ -14,15 +14,17 @@ public class PipelineConfig {
     private final String redirectUri;
     private final String baseUrl;
     private final String tokenUrl;
-    public static final int PIPELINE_MAX_HTTP_RETRIES=3;
-    public static final long PIPELINE_DEFAULT_RETRY_AFTER_SEC=3L;
+    private final int pipelineMaxHttpRetries;
+    private final long pipelineDefaultRetryAfterSeconds;
 
-    public PipelineConfig() {
+    public PipelineConfig(int pipelineMaxHttpRetries, long pipelineDefaultRetryAfterSeconds) {
         clientId = loadFromEnvironmentVariables("SPOTIFY_CLIENT_ID");
         clientSecret = loadFromEnvironmentVariables("SPOTIFY_CLIENT_SECRET");
         redirectUri = loadFromEnvironmentVariables("SPOTIFY_REDIRECT_URI");
         baseUrl = loadFromEnvironmentVariables("SPOTIFY_BASE_URL");
         tokenUrl = loadFromEnvironmentVariables("SPOTIFY_TOKEN_URL");
+        this.pipelineMaxHttpRetries = pipelineMaxHttpRetries;
+        this.pipelineDefaultRetryAfterSeconds = pipelineDefaultRetryAfterSeconds;
         logger.info("Pipeline configuration loaded successfully.");
     }
 
