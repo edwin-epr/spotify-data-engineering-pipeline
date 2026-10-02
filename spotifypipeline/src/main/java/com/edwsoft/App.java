@@ -13,15 +13,18 @@ import java.net.http.HttpClient;
 import java.util.List;
 
 /**
- * Hello world!
+ * Spotify Data Engineering Project!
  *
  */
 public class App 
 {
+    public static final int PIPELINE_MAX_HTTP_RETRIES = 3;
+    public static final long PIPELINE_DEFAULT_RETRY_AFTER_SECONDS = 3L;
+
     public static void main( String[] args )
     {
         try(HttpClient client = HttpClient.newHttpClient()) {
-            PipelineConfig pipelineConfig = new PipelineConfig();
+            PipelineConfig pipelineConfig = new PipelineConfig(App.PIPELINE_MAX_HTTP_RETRIES, App.PIPELINE_DEFAULT_RETRY_AFTER_SECONDS);
             SpotifyAuthorization spotifyAuthorization = new SpotifyAuthorization(client, pipelineConfig);
             SparkSession sparkSession = SparkSession.builder()
                     .appName("SpotifyDEProject")

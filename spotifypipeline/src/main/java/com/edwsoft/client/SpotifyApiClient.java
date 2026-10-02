@@ -23,6 +23,7 @@ import java.util.*;
 public class SpotifyApiClient {
     private static final Logger logger = LoggerFactory.getLogger(SpotifyApiClient.class);
     private static final JsonMapper MAPPER = new JsonMapper();
+    private final PipelineConfig pipelineConfig;
     private final HttpClient httpClient;
     private final SpotifyAuthorization spotifyAuthorization;
     private final SparkSession sparkSession;
@@ -30,10 +31,11 @@ public class SpotifyApiClient {
 
     public SpotifyApiClient(HttpClient httpClient, SpotifyAuthorization spotifyAuthorization, SparkSession sparkSession,
                             PipelineConfig pipelineConfig) {
+        this.pipelineConfig = pipelineConfig;
         this.httpClient = httpClient;
         this.spotifyAuthorization = spotifyAuthorization;
         this.sparkSession = sparkSession;
-        String rawBaseURL = pipelineConfig.getBaseUrl();
+        String rawBaseURL = this.pipelineConfig.getBaseUrl();
         this.normalizedBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL : rawBaseURL + "/";
     }
 
@@ -42,7 +44,7 @@ public class SpotifyApiClient {
 
         URI uri = buildURI(endpoint, spotifyId, params);
 
-        int maxRetries = PipelineConfig.PIPELINE_MAX_HTTP_RETRIES;
+        int maxRetries = pipelineConfig.getPipelineMaxHttpRetries();
         int currentRetry = 0;
         while (currentRetry < maxRetries) {
             try {
@@ -63,7 +65,7 @@ public class SpotifyApiClient {
                 if (response.statusCode() == 429) {
                     long retryAfter = response.headers().firstValue("Retry-After")
                             .map(Long::parseLong)
-                            .orElse(PipelineConfig.PIPELINE_DEFAULT_RETRY_AFTER_SEC);
+                            .orElse(pipelineConfig.getPipelineDefaultRetryAfterSeconds());
 
                     logger.warn("Rate limit hit (429) for {}/{}. Waiting {} seconds before retry {}/{}...", endpoint, spotifyId, retryAfter, currentRetry + 1, maxRetries);
                     Thread.sleep(retryAfter * 1000);
