@@ -22,14 +22,19 @@ public class SpotifyAuthorization {
     private static final ObjectMapper MAPPER = new JsonMapper();
     private final PipelineConfig pipelineConfig;
     private final HttpClient httpClient;
-    private Token accessToken = new Token("", Instant.MIN);
+    private Token accessToken;
 
-    public SpotifyAuthorization(HttpClient httpClient, PipelineConfig pipelineConfig) {
+    public SpotifyAuthorization(HttpClient httpClient, PipelineConfig pipelineConfig, Token initialToken) {
         this.httpClient = httpClient;
         this.pipelineConfig = pipelineConfig;
+        this.accessToken = initialToken;
     }
 
-    public JsonNode fetchToken() {
+    public SpotifyAuthorization(HttpClient httpClient, PipelineConfig pipelineConfig) {
+        this(httpClient, pipelineConfig, new Token("", Instant.MIN));
+    }
+
+    private JsonNode fetchToken() {
         String clientId = pipelineConfig.getClientId();
         String clientSecret = pipelineConfig.getClientSecret();
         String tokenUrl = pipelineConfig.getTokenUrl();
