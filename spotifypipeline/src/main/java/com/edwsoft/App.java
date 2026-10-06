@@ -38,8 +38,8 @@ public class App
 
             Dataset<Row> albumTracks = spotifyClient.getDistinctTracksFromPlaylistAlbums(playlistId, processedPlaylist);
             List<String> tracksList = spotifyClient.getTracksList(playlistId, albumTracks);
-            Dataset<Row> fullAlbumsFromPlaylist = spotifyClient.getAlbumsTracksBasedOnPlaylist(playlistId, albumTracks, tracksList);
-            Dataset<Row> tracksFeatures = spotifyAnalytics.getTrackFeatures(fullAlbumsFromPlaylist);
+            Dataset<Row> fullAlbumsFromPlaylist = spotifyClient.getFullTrackDetailsByPlaylist(playlistId, albumTracks, tracksList);
+            Dataset<Row> tracksFeatures = spotifyAnalytics.deriveTrackFeatures(fullAlbumsFromPlaylist);
 
             fullAlbumsFromPlaylist.createOrReplaceTempView("full_albums");
             tracksFeatures.createOrReplaceTempView("full_albums_with_tracks_features");

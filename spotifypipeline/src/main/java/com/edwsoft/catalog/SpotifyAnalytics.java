@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 public class SpotifyAnalytics {
     private static final Logger logger = LoggerFactory.getLogger(SpotifyAnalytics.class);
 
-    public Dataset<Row> albumsWithMostTracks(Dataset<Row> albumTracks) {
+    public Dataset<Row> rankAlbumsByTrackCount(Dataset<Row> albumTracks) {
         logger.info("Calculating albums with most tracks");
 
         return albumTracks
@@ -18,7 +18,7 @@ public class SpotifyAnalytics {
                 .orderBy(functions.desc("count"));
     }
 
-    public Dataset<Row> avgPopularityByAlbum(Dataset<Row> albumTracks) {
+    public Dataset<Row> calcAvgPopularityByAlbum(Dataset<Row> albumTracks) {
         logger.info("Calculating average popularity by album");
 
         return albumTracks
@@ -27,7 +27,7 @@ public class SpotifyAnalytics {
                 .orderBy(functions.desc("avg_popularity"));
     }
 
-    public Dataset<Row> top5LongestAlbums(Dataset<Row> albumTracks) {
+    public Dataset<Row> getTop5AlbumsByTrackCount(Dataset<Row> albumTracks) {
         logger.info("Calculating top 5 longest albums by track count");
 
         return albumTracks
@@ -37,7 +37,7 @@ public class SpotifyAnalytics {
                 .limit(5);
     }
 
-    public Dataset<Row> getTrackFeatures(Dataset<Row> albumTracks) {
+    public Dataset<Row> deriveTrackFeatures(Dataset<Row> albumTracks) {
         logger.info("Extracting track features from album tracks.");
 
         return albumTracks.select(
