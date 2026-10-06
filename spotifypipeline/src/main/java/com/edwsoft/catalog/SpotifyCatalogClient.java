@@ -49,7 +49,7 @@ public class SpotifyCatalogClient {
         return SpotifyDataProcessor.jsonToDataFrame(tracks, sparkSession);
     }
 
-    public Dataset<Row> getArtistsNameIds(String playlistsId, Dataset<Row> processedPlaylist) {
+    public Dataset<Row> getArtistNamesAndIds(String playlistsId, Dataset<Row> processedPlaylist) {
         logger.info("Getting artists names from playlist id: {}.", playlistsId);
         Dataset<Row> artistsMatched = processedPlaylist.selectExpr(
                 "inline(arrays_zip(artists.id, artists.name)) as (artist_id, artist_name)"
@@ -79,7 +79,7 @@ public class SpotifyCatalogClient {
         return playlists;
     }
 
-    public Dataset<Row> getAlbumTracks(List<String> albumsIds) {
+    public Dataset<Row> getTracksByAlbumIds(List<String> albumsIds) {
         logger.info("Getting tracks from {} albums.", albumsIds.size());
         Dataset<Row> albums = spotifyApiClient.fetchBatchJson("albums", albumsIds)
                 .select(
@@ -107,7 +107,7 @@ public class SpotifyCatalogClient {
 
         logger.info("Found {} albums in playlist id: {}.", albumsIds.size(), playlistsIds);
 
-        Dataset<Row> albums = getAlbumTracks(albumsIds).distinct();
+        Dataset<Row> albums = getTracksByAlbumIds(albumsIds).distinct();
 
         logger.info("Returning {} distinct tracks from playlist id: {}.", albums.count(), playlistsIds);
 
@@ -136,7 +136,7 @@ public class SpotifyCatalogClient {
        return tracks;
     }
 
-    public Dataset<Row> getAlbumsTracksBasedOnPlaylist(String playlistId, Dataset<Row> albumTracks, List<String> tracksList) {
+    public Dataset<Row> getFullTrackDetailsByPlaylist(String playlistId, Dataset<Row> albumTracks, List<String> tracksList) {
         logger.info("Getting albums tracks based on playlist id: {}.", playlistId);
 
         Dataset<Row> tracks = getTracks(tracksList);
