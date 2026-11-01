@@ -15,6 +15,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Optional;
 
 public class SpotifyAuthorization {
@@ -27,7 +28,7 @@ public class SpotifyAuthorization {
     public SpotifyAuthorization(HttpClient httpClient, PipelineConfig pipelineConfig, Token initialToken) {
         this.httpClient = httpClient;
         this.pipelineConfig = pipelineConfig;
-        this.accessToken = initialToken;
+        this.accessToken = Objects.requireNonNull(initialToken, "Initial token cannot be null");
     }
 
     public SpotifyAuthorization(HttpClient httpClient, PipelineConfig pipelineConfig) {
@@ -67,6 +68,7 @@ public class SpotifyAuthorization {
             logger.error("I/O error: {}.", e.getMessage(), e);
             return MAPPER.createObjectNode();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             logger.error("Interruption error: {}.", e.getMessage(), e);
             return MAPPER.createObjectNode();
         }
@@ -75,7 +77,7 @@ public class SpotifyAuthorization {
     public Optional<String> getAccessToken() {
         if (accessToken.isValid()) {
             logger.debug("Returning cached token, expires at: {}", accessToken.expiresAt());
-            return Optional.ofNullable(accessToken.token());
+            return Optional.of(accessToken.token());
         }
 
         logger.info("Fetching new access token.");
@@ -98,7 +100,6 @@ public class SpotifyAuthorization {
         accessToken = new Token(token, Instant.now().plusSeconds(expiresIn));
         logger.info("New access token obtained, expires at: {}", accessToken.expiresAt());
 
-        return Optional.ofNullable(accessToken.token())
-                .filter(strObject -> !strObject.isEmpty());
+        return Optional.of(accessToken.token());
     }
 }
